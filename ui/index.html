@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1 id="header">Welcome from Tauri!</h1>
+    <div id="canvas"></div>
+    <script>
+        const { invoke } = window.__TAURI__.tauri
+        /*invoke('greet', { name: 'World' })
+            .then((response) => {
+                window.header.innerHTML = response
+            })*/
+        invoke('string_command', {})
+            .then((response) => {
+                console.log(response)
+                window.canvas.innerHTML = response
+            })
+    </script>
+  </body>
+</html>
