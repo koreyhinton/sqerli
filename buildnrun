@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cargo tauri build --debug # -b none
+ec=$?
+echo "(BUILD COMPLETE, exit code=${ec})"
+if [[ $ec -eq 0 ]]; then
+    src-tauri/target/debug/bundle/appimage/sqerli_0.1.0_amd64.AppImage "${PWD}/example_ddl.sql"
+fi

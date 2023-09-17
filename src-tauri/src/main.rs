@@ -34,6 +34,9 @@ fn main() {
           chars.next();
           chars.next_back();
 
+          let path = std::env::current_dir()?;
+          println!("cwd = {}", path.display());
+
           println!("{}", chars.as_str());
           sql = fs::read_to_string(chars.as_str()).expect("Unable to read file");
           sql = format!(" {}", sql); // temp fix for next() skipping first char

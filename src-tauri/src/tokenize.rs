@@ -1,4 +1,5 @@
 use std::iter::Peekable;
+use core::fmt::Error;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TokenType {
@@ -8,7 +9,8 @@ pub enum TokenType {
   CRT_COL,
   CRT_CLS,
   CRT_OPN,
-  REL
+  REL,
+  STM_CLS
 }
 
 #[derive(Clone,Debug)]
@@ -50,6 +52,10 @@ fn has(tokens: Vec<Token>, tokenType: TokenType) -> bool {
   return tokens.iter().any(|t| t.tokType == tokenType);
 }
 
+fn can_col(tok: Token) -> bool {
+  return tok.tokType == TokenType::CRT_OPN || tok.tokType == TokenType::CRT_COL;
+}
+
 /*fn it_chars(chars: Peekable<std::str::Chars>) -> &mut Peekable<std::str::Chars> {
 // fn it_chars<'a>(chars: &'a mut Peekable<std::str::Chars<'a>>) -> &'a mut Peekable<std::str::Chars<'a>> {
 //  return &mut 
@@ -84,74 +90,113 @@ fn tokenize_rel(chars: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>){
   }
 }
 
-//fn tokenize(name: &mut String) -> Vec<String> {
-pub fn tokenize(chars_in: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>) {
-//fn tokenize<'a>(chars: &mut Peekable<std::str::Chars>, tokens: &'a mut Vec<&'a mut Token>) {
 
-  let binding = format!("0{}", chars_in.collect::<String>());
-  let chars = &mut binding.chars().peekable();
-  //let chars = it_chars(chars_in.collect().chars().peekable());
-  //let binding = chars_in.collect::<String>();
-  //let chars = it_chars(binding.chars().peekable());
-  //let chars = it_chars(chars_in.collect::<String>().chars().peekable());
-
-  loop {
-    if eos(chars) {
-      break;
+//fn get_next_token_string(str: &str, tokens: &mut Vec<Token>) -> Option<(&str, &str)> {
+fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&'a str, &'a str)> {
+//fn get_next_token_string<'a>(str: &'a str, tokens: &'a mut Vec<Token>) -> Option<(&'a str, &'a str)> {
+  dbg!("get_next_token_string");
+  for (i,c) in str.chars().enumerate() {
+    dbg!(i, c);
+    if ws(c) && (zero(tokens.to_vec()) || opn(last(tokens.to_vec()))) {
+      dbg!("ws detected");
+      return Some((&str[..i+1], &str[i+1..]));
     }
-    let ch = current(chars); //.next().unwrap();
-    dbg!(ch);
-    if ch == '/' {
-      //dbg!(format!("c{}", chars.collect::<String>().to_string().as_str().to_lowercase()).starts_with("create table"));
-      //dbg!(has(tokens.to_vec(),TokenType::COM_CLS));
-      dbg!(tokens.to_vec());
-      dbg!(ch);
-      dbg!(peek(chars));
-      dbg!(zero(tokens.to_vec()));
-      dbg!(ch == '/');
-      dbg!(peek(chars) == '*');
-      return; //todo: remove
-    }
-
-    if ws(ch) && (zero(tokens.to_vec()) || opn(last(tokens.to_vec()))) {}
-    else if zero(tokens.to_vec()) && ch == '/' && *chars.peek().unwrap() == '*' {
+    else if zero(tokens.to_vec()) && c == '/' && (str.len()>1/*&& &str[i+1..i+2]=="*"*/) {
       dbg!("start comment detected");
-      forward(chars); //.next();
       tokens.push(Token{tokType:TokenType::COM_OPN,tokValue:"/*".to_owned()});
+      return Some((&str[..i], &str[i+2..]));
     }
-    else if ch == '<' && gt0(tokens.to_vec()) && (opn(last(tokens.to_vec()))||rel(last(tokens.to_vec()))) {
+    else if c == '<' && gt0(tokens.to_vec()) && (opn(last(tokens.to_vec()))||rel(last(tokens.to_vec()))) {
       dbg!("relationship detected");
-      let mut rel_tokens = Vec::<Token>::new();
-      tokenize_rel(chars, &mut rel_tokens);
-      tokens.append(&mut rel_tokens);
-    }
-    else if (ch == 'c'||ch=='C') && has(tokens.to_vec(),TokenType::COM_CLS) && format!("c{}", chars.collect::<String>().to_string().as_str().to_lowercase()).starts_with("create table") {
-      dbg!("detected create statement");
-      let mut str = String::new();
-      for i in 1..13 { forward(chars);/*.next();*/ }
-      while chars.peek() != Some(&'(') {
-        
-        str = format!("{}{}", str,current(chars)/*.next().unwrap()*/);
-        forward(chars);
-        println!("test: {}",str);
-      }
-      tokens.push(Token{tokType:TokenType::CRT,tokValue:str.to_owned()});
-      forward(chars);//.next();
-      tokens.push(Token{tokType:TokenType::CRT_OPN,tokValue:"(".to_owned()});
-
-      let mut capture = true;
-      while chars.peek() != Some(&')') {
-        let mut col = String::new();
-        while capture && chars.peek() != Some(&' ') {
-          let col_ch = current(chars); //.next().unwrap();
-          forward(chars);
-          col = format!("{}{}", col, col_ch)
+      // let mut rel_tokens = Vec::<Token>::new();
+      // tokenize_rel(chars, &mut rel_tokens);
+      // tokens.append(&mut rel_tokens);
+      // ==> For now skipping comment containing table col rels
+      for (j, c2) in str.chars().enumerate() {
+        if c2 == '*' && str.len() > j+1 && &str[j+1..j+2] == "/" {
+          return Some((&str[..j], &str[j+2..]));
         }
-        tokens.push(Token{tokType:TokenType::CRT_COL,tokValue:col.to_owned()});
-        capture = chars.peek() == Some(&' ');
       }
-      forward(chars); //.next();
-      tokens.push(Token{tokType:TokenType::CRT_CLS,tokValue:")".to_owned()});
+    }
+    else if str.len() > "create table".len() && str[i.."create table".len()].to_lowercase() == "create table" {
+      dbg!("detected create statement");
+      // tokens.push(Token{tokType:TokenType::CRT,tokValue:str[i.."create table".len()].to_string()/*str.to_owned()*/});
+      for (j, c2) in str.chars().enumerate() {
+        if c2 == '(' {
+          tokens.push(Token{tokType:TokenType::CRT,tokValue:str[i+"create table".len()+1..j].trim().to_string()/*str.to_owned()*/});
+          tokens.push(Token{tokType:TokenType::CRT_OPN,tokValue:"(".to_owned()});
+          return Some((&str[..j], &str[j+1..]));
+        }
+      }
+      
+    }
+    else if can_col(last(tokens.to_vec())) {
+      dbg!("detected column in create statement");
+      for (j, c2) in str.chars().enumerate() {
+        if c2 == ')' {
+          //tokens.push(Token{tokType:TokenType::CRT_COL,tokValue:col.to_owned()});
+          tokens.push(Token{tokType:TokenType::CRT_COL,tokValue:str[i..j].trim().to_string()});
+          tokens.push(Token{tokType:TokenType::CRT_CLS,tokValue:")".to_owned()});
+        }
+        else if c2 == ';' {
+          tokens.push(Token{tokType:TokenType::STM_CLS,tokValue:";".to_owned()});
+          return Some((&str[..j+1], &str[j+1..]));
+          // return None;
+        }
+        else if c2 == ',' {
+          tokens.push(Token{tokType:TokenType::CRT_COL,tokValue:str[i..j].trim().to_string()});
+          return Some((&str[..j], &str[j+1..]));
+        }
+        /*else if j<str.len()-1 {
+          return Some((&str[..j+1], &str[j+1..]));
+        }
+        else {
+          return None;
+        }*/
+      }
+    }
+    else if ws(c) && i<str.len()-1 {
+      return Some((&str[..i+1], &str[i+1..]));
+    }
+    else {
+      dbg!(c);
+      dbg!(i);
+      println!("???");
+      return None;
     }
   }
+  None
 }
+
+pub fn tokenize(chars_in: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>) {
+  let str: &str = &String::from(chars_in.collect::<String>());
+  let mut i = 0;
+  let mut str2: &str = str;
+  loop {
+    // let str2 = str;
+
+    let Ok((prev,str3)) = get_next_token_string(str2, tokens).ok_or(Error)
+    else {
+      break;
+    };
+//.unwrap(); //.ok_or(Error)?;
+    str2 = str3;
+    dbg!(prev);
+    dbg!(str2);
+    println!("--");
+    i = i + 1;
+    if i > 10 {
+      continue; // break;
+    }
+  }
+  /*while let Some((prev,str)) = get_next_token_string(str, tokens) {
+    dbg!(prev);
+    dbg!(str);
+    println!("--");
+    i = i + 1;
+    if i > 10 {
+      break;
+    }
+  }*/
+}
+
