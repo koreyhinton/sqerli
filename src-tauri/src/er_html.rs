@@ -35,7 +35,7 @@ pub fn er_html(tokens: Vec::<tokenize::Token>) -> String {
       TokenType::CRT_COL => {
         // str = format!("{}<br/><input type='text' value=' + {}' style='font-style:italic;background-color:white;' disabled='disabled'>", str.to_string(), token.tokValue);
         stack.push(format!("<rect x='{}' y='{}' width='{}' height='{}' stroke='black' fill='transparent' stroke-width='1'/>", child_x, child_y, w, h));
-        stack.push(format!("<text x='{}' y='{}' fill='black'> &plus; {}</text>", child_x+9, child_y+18, token.tokValue));
+        stack.push(format!("<text x='{}' y='{}' fill='black'> + {}</text>", child_x+9, child_y+18, token.tokValue));
         // todo: redo with tokens (from id relationships noted in sql comments)
         if token.tokValue.starts_with("Gid") {
           svg = format!("{}<line x1='{}' y1='{}' x2='{}' y2='{}' stroke='black' stroke-width='1'/>", svg, x, y, x+50, y);

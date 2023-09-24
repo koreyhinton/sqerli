@@ -94,20 +94,20 @@ fn tokenize_rel(chars: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>){
 //fn get_next_token_string(str: &str, tokens: &mut Vec<Token>) -> Option<(&str, &str)> {
 fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&'a str, &'a str)> {
 //fn get_next_token_string<'a>(str: &'a str, tokens: &'a mut Vec<Token>) -> Option<(&'a str, &'a str)> {
-  dbg!("get_next_token_string");
+  // dbg!("get_next_token_string");
   for (i,c) in str.chars().enumerate() {
-    dbg!(i, c);
+    // dbg!(i, c);
     if ws(c) && (zero(tokens.to_vec()) || opn(last(tokens.to_vec()))) {
-      dbg!("ws detected");
+      // dbg!("ws detected");
       return Some((&str[..i+1], &str[i+1..]));
     }
     else if zero(tokens.to_vec()) && c == '/' && (str.len()>1/*&& &str[i+1..i+2]=="*"*/) {
-      dbg!("start comment detected");
+      // dbg!("start comment detected");
       tokens.push(Token{tokType:TokenType::COM_OPN,tokValue:"/*".to_owned()});
       return Some((&str[..i], &str[i+2..]));
     }
     else if c == '<' && gt0(tokens.to_vec()) && (opn(last(tokens.to_vec()))||rel(last(tokens.to_vec()))) {
-      dbg!("relationship detected");
+      // dbg!("relationship detected");
       // let mut rel_tokens = Vec::<Token>::new();
       // tokenize_rel(chars, &mut rel_tokens);
       // tokens.append(&mut rel_tokens);
@@ -119,7 +119,7 @@ fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&
       }
     }
     else if str.len() > "create table".len() && str[i.."create table".len()].to_lowercase() == "create table" {
-      dbg!("detected create statement");
+      // dbg!("detected create statement");
       // tokens.push(Token{tokType:TokenType::CRT,tokValue:str[i.."create table".len()].to_string()/*str.to_owned()*/});
       for (j, c2) in str.chars().enumerate() {
         if c2 == '(' {
@@ -131,7 +131,7 @@ fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&
       
     }
     else if can_col(last(tokens.to_vec())) {
-      dbg!("detected column in create statement");
+      // dbg!("detected column in create statement");
       for (j, c2) in str.chars().enumerate() {
         if c2 == ')' {
           //tokens.push(Token{tokType:TokenType::CRT_COL,tokValue:col.to_owned()});
@@ -159,8 +159,8 @@ fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&
       return Some((&str[..i+1], &str[i+1..]));
     }
     else {
-      dbg!(c);
-      dbg!(i);
+      // dbg!(c);
+      // dbg!(i);
       println!("???");
       return None;
     }

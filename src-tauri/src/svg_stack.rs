@@ -27,7 +27,7 @@ impl SvgStack {
       return;
     }
     self.closed = true;
-    self.vec.push_back(format!("<svg x='{}' y='{}' width='{}' height='{}'>", self.x, self.y, self.w, self.h))
+    self.vec.push_back(format!("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' x='{}' y='{}' width='{}' height='{}'>", self.x, self.y, self.w, self.h))
   }
   pub fn len(&mut self) -> usize {
     self.vec.len()
