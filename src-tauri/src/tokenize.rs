@@ -90,10 +90,7 @@ fn tokenize_rel(chars: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>){
   }
 }
 
-
-//fn get_next_token_string(str: &str, tokens: &mut Vec<Token>) -> Option<(&str, &str)> {
-fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&'a str, &'a str)> {
-//fn get_next_token_string<'a>(str: &'a str, tokens: &'a mut Vec<Token>) -> Option<(&'a str, &'a str)> {
+fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>, rel_map: &mut Vec<crate::rel_map::RelMapping>) -> Option<(&'a str, &'a str)> {
   // dbg!("get_next_token_string");
   for (i,c) in str.chars().enumerate() {
     // dbg!(i, c);
@@ -114,7 +111,9 @@ fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&
       // ==> For now skipping comment containing table col rels
       for (j, c2) in str.chars().enumerate() {
         if c2 == '*' && str.len() > j+1 && &str[j+1..j+2] == "/" {
-          return Some((&str[..j], &str[j+2..]));
+          // dbg!(&str[..j]);
+          crate::rel_map::rel_mappings(&str[..j], rel_map);
+          return Some((&str[..j], &str[j+2..]))
         }
       }
     }
@@ -168,22 +167,22 @@ fn get_next_token_string<'a>(str: &'a str, tokens: &mut Vec<Token>) -> Option<(&
   None
 }
 
-pub fn tokenize(chars_in: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>) {
+pub fn tokenize(chars_in: &mut Peekable<std::str::Chars>, tokens: &mut Vec<Token>, rel_map: &mut Vec<crate::rel_map::RelMapping>) {
   let str: &str = &String::from(chars_in.collect::<String>());
   let mut i = 0;
   let mut str2: &str = str;
   loop {
     // let str2 = str;
 
-    let Ok((prev,str3)) = get_next_token_string(str2, tokens).ok_or(Error)
+    let Ok((prev,str3)) = get_next_token_string(str2, tokens, rel_map).ok_or(Error)
     else {
       break;
     };
 //.unwrap(); //.ok_or(Error)?;
     str2 = str3;
-    dbg!(prev);
+    /*dbg!(prev);
     dbg!(str2);
-    println!("--");
+    println!("--");*/
     i = i + 1;
     if i > 10 {
       continue; // break;

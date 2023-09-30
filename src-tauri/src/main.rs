@@ -72,9 +72,12 @@ fn main() {
           println!("{}", sql);
 
           let mut tokens = Vec::<sqerli::tokenize::Token>::new();
+          let mut rel_mappings = Vec::<sqerli::rel_map::RelMapping>::new();
           let mut sql_chars = sql.chars().peekable();
-          sqerli::tokenize::tokenize(&mut sql_chars, &mut tokens);
+          sqerli::tokenize::tokenize(&mut sql_chars, &mut tokens, &mut rel_mappings);
 //        app.manage(MyString(sql_chars.collect::<String>()));
+
+          sqerli::rel_map::set_points(&mut rel_mappings, tokens.to_vec());
 
           let html = sqerli::er_html::er_html(tokens.to_vec());
 

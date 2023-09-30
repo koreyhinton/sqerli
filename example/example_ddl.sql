@@ -1,7 +1,6 @@
 /*
     <--  GBook.Gid GBookLang.Gid GBookTitle.Gid
     -->> GBookTransl.Gid GBookWordPos.Gid
-    -->  GBook.Gid GBookLang.Gid GBookTitle.Gid
     <--  GBookWordPos.WordId
     -->> Word.WordId
 */
