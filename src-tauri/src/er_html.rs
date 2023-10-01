@@ -1,9 +1,27 @@
 use crate::tokenize;
 use crate::tokenize::TokenType;
+use crate::rel_map::RelMapping;
 use crate::svg_stack::SvgStack;
 
-pub fn er_html(tokens: Vec::<tokenize::Token>) -> String {
-  dbg!("{:?}", tokens.to_vec());
+fn er_html_rels(rel_maps: Vec::<RelMapping>, stack: &mut SvgStack) {
+  for map in rel_maps {
+    stack.start_child(0, 0);
+
+    let x2 = map.cinch.x;
+    let y2 = map.cinch.y;
+
+    for left in map.fan_left.rels {
+      stack.push(format!("<line x1='{}' y1='{}' x2='{}' y2='{}' stroke='black' stroke-width='1' id='{}'/>", left.point.x, left.point.y, x2, y2, left.id));
+    }
+    for right in map.fan_right.rels {
+      stack.push(format!("<line x1='{}' y1='{}' x2='{}' y2='{}' stroke='black' stroke-width='1' id='{}'/>", x2, y2, right.point.x, right.point.y, right.id));
+    }
+    stack.end_child(1000, 1000);
+  }
+}
+
+pub fn er_html(tokens: Vec::<tokenize::Token>, rel_maps: Vec::<RelMapping>) -> String {
+  // dbg!("{:?}", tokens.to_vec());
 
   let mut stack = SvgStack::new(0, 0, 1000, 1000);
   let mut svg = String::new();
@@ -62,6 +80,9 @@ pub fn er_html(tokens: Vec::<tokenize::Token>) -> String {
   str = format!("{}{}", str, svg);
 
   //return str.to_string(); //"".to_owned();
+
+  er_html_rels(rel_maps, &mut stack);
+
   stack.close();
   return stack.to_string()
 }

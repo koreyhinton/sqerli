@@ -16,7 +16,7 @@ impl SvgStack {
   pub fn new(x: i32, y: i32, w: i32, h: i32) -> SvgStack {
     // let str = format!("<svg x='{}' y='{}' width='{}' height='{}'>", x, y, w, h);
     let mut vec = vector::Vector::<String>::new();
-    {  
+    {
       vec.push_back("</svg>".to_string());
       // vec.push_back(str);
     }

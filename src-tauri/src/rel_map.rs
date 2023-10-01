@@ -5,24 +5,28 @@ const EOL: &'static str = "\r\n";
 #[cfg(not(windows))]
 const EOL: &'static str = "\n";
 
+#[derive(Clone, Debug)]
 pub struct Point {
-  x: usize,
-  y: usize
+  pub x: usize,
+  pub y: usize
 }
 
+#[derive(Clone, Debug)]
 pub enum RelTerminiType {
   One,
   Many
 }
 
+#[derive(Clone, Debug)]
 pub struct RelEnd {
-  point: Point,
-  id: String // table.col
+  pub point: Point,
+  pub id: String // table.col
 }
 
+#[derive(Clone, Debug)]
 pub struct RelTermini {
-  r#type: RelTerminiType,
-  rels: Vec<RelEnd>
+  pub r#type: RelTerminiType,
+  pub rels: Vec<RelEnd>
 }
 
 /*
@@ -44,10 +48,11 @@ B--fl-//-fr--E
   A = RelEnd (same for B-F)
 
 */
+#[derive(Clone, Debug)]
 pub struct RelMapping {
-  fan_left: RelTermini,
-  fan_right: RelTermini,
-  cinch: Point
+  pub fan_left: RelTermini,
+  pub fan_right: RelTermini,
+  pub cinch: Point
 }
 
 // -> (total_table_count, total_attribute_count)
@@ -56,12 +61,15 @@ pub fn counts(table: String, attribute: String, tokens: Vec<crate::tokenize::Tok
   let mut tcnt = 0;
   let mut acnt = 0;
   for token in tokens {
-    if table_done && token.tokType == crate::tokenize::TokenType::CRT_COL && token.tokValue == attribute {
+    if table_done && token.tokType == crate::tokenize::TokenType::CRT_COL && token.tokValue.split(" ").nth(0).unwrap() == attribute {
       acnt += 1;
       break;
     }
-    else if table_done {
+    else if table_done && token.tokType == crate::tokenize::TokenType::CRT_COL {
       acnt += 1;
+    }
+    else if table_done {
+      continue;
     }
     else if token.tokType == crate::tokenize::TokenType::CRT_COL {
       acnt += 1;
@@ -90,7 +98,7 @@ fn get_next_mapping<'a>(rel_str: &'a str, rel_maps: &mut Vec<RelMapping>) -> Opt
     if c == '<' {
 
       let x: usize = 200;
-      let y: usize = 100+100*rel_maps.len();
+      let y: usize = 100+400*rel_maps.len();
 
       let mut left_type = RelTerminiType::One;
       let mut right_type = RelTerminiType::One;
@@ -148,12 +156,13 @@ fn get_next_mapping<'a>(rel_str: &'a str, rel_maps: &mut Vec<RelMapping>) -> Opt
         cinch: Point { x, y }
       };
       rel_maps.push(map);
-      if j+1 <= rel_str.len() {
+      println!("check!: i={:?}, j={:?}, len={:?}", i, j, rel_str.len());
+      if j+1 >= rel_str.len() {
         return None
       }
       return Some((&rel_str[..j], &rel_str[j+1..]))
     } // end if '<'
-    else if i+1 <= rel_str.len() {
+    else if i+1 < rel_str.len() {
       return Some((&rel_str[..i], &rel_str[i+1..]))
     }
     return None
@@ -162,13 +171,16 @@ fn get_next_mapping<'a>(rel_str: &'a str, rel_maps: &mut Vec<RelMapping>) -> Opt
 }
 
 pub fn rel_mappings(rel_str: &str, rel_maps: &mut Vec<RelMapping>) {
-  dbg!(rel_str);
+  // dbg!(rel_str);
   let mut str2: &str = rel_str;
   loop {
     let Ok((prev,str3)) = get_next_mapping(str2, rel_maps).ok_or(Error)
     else {
+      println!("Consumed (end): {:?}", str2);
       break;
     };
+    println!("Consumed: {:?}", prev);
+    println!("Remaining: {:?}", str3);
     str2 = str3;
   }
 }
@@ -176,25 +188,39 @@ pub fn rel_mappings(rel_str: &str, rel_maps: &mut Vec<RelMapping>) {
 pub fn set_points(rel_maps: &mut Vec<RelMapping>, tokens: Vec<crate::tokenize::Token>) {
   // call set_points after all sql tokens have been added to tokens
   let h: usize = 27;
+  let lead: usize = 0; //65 - 40;
   for map in rel_maps {
     for i in 0..map.fan_left.rels.len() {
       let mut names = map.fan_left.rels[i].id.split(".");
-      println!("{:?}", map.fan_left.rels[i].id);
+      // println!("{:?}", map.fan_left.rels[i].id);
       let tbl = names.next().unwrap().to_string();
       let col = names.next().unwrap().to_string();
       // nth actually advances the iterator
       let (tcnt, acnt) = counts(tbl/*names.nth(0).unwrap().to_string()*/, col/*names.nth(1).unwrap().to_string()*/, tokens.clone());
-      map.fan_left.rels[i].point.x = 60;
-      map.fan_left.rels[i].point.y = tcnt*27 + acnt*27;
+      // println!("id: {}. Table count = {}. Col count = {}.", map.fan_left.rels[i].id, tcnt, acnt);
+      let mut lead2: usize = 27;
+      if tcnt>1 {
+        lead2 += ((tcnt)*27*2);
+        lead2 -= 100;
+        lead2 += 17;
+      }
+      map.fan_left.rels[i].point.x = 170;//60;
+      map.fan_left.rels[i].point.y = lead2+lead + (tcnt+1)*h + acnt*(h/*/2*/); // tcnt*27 for spacing between tables
     }
     for i in 0..map.fan_right.rels.len() {
       let mut names = map.fan_right.rels[i].id.split(".");
-      println!("{:?}", map.fan_right.rels[i].id);
+      // println!("{:?}", map.fan_right.rels[i].id);
       let tbl = names.next().unwrap().to_string();
       let col = names.next().unwrap().to_string();
       let (tcnt, acnt) = counts(tbl, col, tokens.clone());
-      map.fan_right.rels[i].point.x = 60;
-      map.fan_right.rels[i].point.y = tcnt*h + acnt*h;
+      let mut lead2: usize = 27;
+      if tcnt>1 {
+        lead2 += ((tcnt)*27*2);
+        lead2 -= 100;
+        lead2 += 17;
+      }
+      map.fan_right.rels[i].point.x = 170;//60;
+      map.fan_right.rels[i].point.y = lead2+lead + (tcnt+1)*h + acnt*(h/*/2*/);
     }
   }
 }

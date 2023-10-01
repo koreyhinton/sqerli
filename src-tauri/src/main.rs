@@ -31,13 +31,13 @@ fn cli_path_clean(path: String) -> String {
 }
 
 fn cli_arg_sql_file(args: &HashMap<String, ArgData>) -> String {
-  println!("{:?}", args["sql file"]);
+  // println!("{:?}", args["sql file"]);
   let path = args["sql file"].value.to_string();
   cli_path_clean(path)
 }
 
 fn cli_arg_o(args: &HashMap<String, ArgData>) -> Option<String> {
-  println!("{:?}", args["output"]);
+  // println!("{:?}", args["output"]);
   if args["output"].occurrences == 1 {
     let path = cli_path_clean(args["output"].value.to_string());
     return Some(path)
@@ -69,7 +69,7 @@ fn main() {
           //println!("{:?}",ddl_path);
           sql = fs::read_to_string(ddl_path).expect("Unable to read file");
           // sql = format!(" {}", sql); // temp fix for next() skipping first char
-          println!("{}", sql);
+          // println!("{}", sql);
 
           let mut tokens = Vec::<sqerli::tokenize::Token>::new();
           let mut rel_mappings = Vec::<sqerli::rel_map::RelMapping>::new();
@@ -79,7 +79,9 @@ fn main() {
 
           sqerli::rel_map::set_points(&mut rel_mappings, tokens.to_vec());
 
-          let html = sqerli::er_html::er_html(tokens.to_vec());
+          let html = sqerli::er_html::er_html(tokens.to_vec(), rel_mappings.to_vec()); // requires Clone trait declaration
+
+          println!("rel_mappings{:?}", rel_mappings);
 
           opt_out_f_write(output_file, &html);
           app.manage(MyString(html));
