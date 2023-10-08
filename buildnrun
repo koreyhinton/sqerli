@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cargo tauri build --debug # -b none
+cargo tauri dev -- -- "${PWD}/example/example_ddl.sql" -o "${PWD}/example/example_ddl.svg" # RUSTFLAGS="-C link-arg=-fuse-ld=lld" cargo tauri build --debug -b appimage # -b none
 ec=$?
 echo "(BUILD COMPLETE, exit code=${ec})"
-if [[ $ec -eq 0 ]]; then
-    src-tauri/target/debug/bundle/appimage/sqerli_0.1.0_amd64.AppImage "${PWD}/example/example_ddl.sql" -o "${PWD}/example/example_ddl.svg"
-fi
+# if [[ $ec -eq 0 ]]; then
+#     RUST_BACKTRACE=1 src-tauri/target/debug/bundle/appimage/sqerli_0.1.0_amd64.AppImage "${PWD}/example/example_ddl.sql" -o "${PWD}/example/example_ddl.svg"
+# fi

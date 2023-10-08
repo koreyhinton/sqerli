@@ -7,8 +7,8 @@ const EOL: &'static str = "\n";
 
 #[derive(Clone, Debug)]
 pub struct Point {
-  pub x: usize,
-  pub y: usize
+  pub x: i32,
+  pub y: i32
 }
 
 #[derive(Clone, Debug)]
@@ -56,7 +56,7 @@ pub struct RelMapping {
 }
 
 // -> (total_table_count, total_attribute_count)
-pub fn counts(table: String, attribute: String, tokens: Vec<crate::tokenize::Token>) -> (usize, usize) {
+pub fn counts(table: String, attribute: String, tokens: Vec<crate::tokenize::Token>) -> (i32, i32) { // (usize, usize) {
   let mut table_done = false;
   let mut tcnt = 0;
   let mut acnt = 0;
@@ -97,8 +97,8 @@ fn get_next_mapping<'a>(rel_str: &'a str, rel_maps: &mut Vec<RelMapping>) -> Opt
   for (i,c) in rel_str.chars().enumerate() {
     if c == '<' {
 
-      let x: usize = 200;
-      let y: usize = 100+400*rel_maps.len();
+      let x: i32 /*usize*/ = 300;
+      let y: i32 /*usize*/ = 100; // + 400*(i as i32); // 100+400*(rel_maps.len() as i32);
 
       let mut left_type = RelTerminiType::One;
       let mut right_type = RelTerminiType::One;
@@ -153,7 +153,7 @@ fn get_next_mapping<'a>(rel_str: &'a str, rel_maps: &mut Vec<RelMapping>) -> Opt
       let map = RelMapping {
         fan_left: RelTermini { r#type: left_type, rels: rels_left },
         fan_right: RelTermini { r#type: right_type, rels: rels_right },
-        cinch: Point { x, y }
+        cinch: Point { x, y: y + (rel_maps.len() as i32*400) }
       };
       rel_maps.push(map);
       println!("check!: i={:?}, j={:?}, len={:?}", i, j, rel_str.len());
@@ -187,8 +187,8 @@ pub fn rel_mappings(rel_str: &str, rel_maps: &mut Vec<RelMapping>) {
 
 pub fn set_points(rel_maps: &mut Vec<RelMapping>, tokens: Vec<crate::tokenize::Token>) {
   // call set_points after all sql tokens have been added to tokens
-  let h: usize = 27;
-  let lead: usize = 0; //65 - 40;
+  let h: /*usize*/ i32 = 27;
+  let lead: /*usize*/ i32 = 0; //65 - 40;
   for map in rel_maps {
     for i in 0..map.fan_left.rels.len() {
       let mut names = map.fan_left.rels[i].id.split(".");
@@ -198,7 +198,7 @@ pub fn set_points(rel_maps: &mut Vec<RelMapping>, tokens: Vec<crate::tokenize::T
       // nth actually advances the iterator
       let (tcnt, acnt) = counts(tbl/*names.nth(0).unwrap().to_string()*/, col/*names.nth(1).unwrap().to_string()*/, tokens.clone());
       // println!("id: {}. Table count = {}. Col count = {}.", map.fan_left.rels[i].id, tcnt, acnt);
-      let mut lead2: usize = 27;
+      let mut lead2: /*usize*/ i32 = 27;
       if tcnt>1 {
         lead2 += ((tcnt)*27*2);
         lead2 -= 100;
@@ -213,7 +213,7 @@ pub fn set_points(rel_maps: &mut Vec<RelMapping>, tokens: Vec<crate::tokenize::T
       let tbl = names.next().unwrap().to_string();
       let col = names.next().unwrap().to_string();
       let (tcnt, acnt) = counts(tbl, col, tokens.clone());
-      let mut lead2: usize = 27;
+      let mut lead2: /*usize*/ i32 = 27;
       if tcnt>1 {
         lead2 += ((tcnt)*27*2);
         lead2 -= 100;

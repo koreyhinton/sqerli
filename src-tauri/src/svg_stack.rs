@@ -8,19 +8,19 @@ pub struct SvgStack {
   w: i32,
   h: i32,
   closed: bool,
-  child_x: i32,
-  child_y: i32
+  child_x: vector::Vector<i32>,
+  child_y: vector::Vector<i32>
 }
 
 impl SvgStack {
-  pub fn new(x: i32, y: i32, w: i32, h: i32) -> SvgStack {
+  pub fn new(x: i32, y: i32, w: i32, h: i32) -> Self {
     // let str = format!("<svg x='{}' y='{}' width='{}' height='{}'>", x, y, w, h);
     let mut vec = vector::Vector::<String>::new();
     {
       vec.push_back("</svg>".to_string());
       // vec.push_back(str);
     }
-    SvgStack { vec, x, y, w, h, closed: false, child_x: 0, child_y: 0 }
+    Self { vec, x, y, w, h, closed: false, child_x: vec![0].into(), child_y: vec![0].into() }
   }
   pub fn close(&mut self) {
     if self.closed {
@@ -39,11 +39,15 @@ impl SvgStack {
     self.vec.push_back(s);
   }
   pub fn end_child(&mut self, x: i32, y: i32) {
-    self.vec.push_back(format!("<svg x='{}' y='{}' width='{}' height='{}'>", self.child_x, self.child_y, x-self.child_x, y-self.child_y))
+    let child_x = self.child_x.pop_back().unwrap();
+    let child_y = self.child_y.pop_back().unwrap();
+    println!("end_child: child.x={},child.y={} x={},y={} . svg = {}",child_x, child_y, x, y, format!("<svg x='{}' y='{}' width='{}' height='{}'>", child_x, child_y, x-child_x, y-child_y));
+    self.vec.push_back(format!("<svg x='{}' y='{}' width='{}' height='{}'>", child_x, child_y, x-child_x, y-child_y))
   }
   pub fn start_child(&mut self, x: i32, y: i32) {
-    self.child_x = x;
-    self.child_y = y;
+    println!("start_child: child_x: {}, child_y: {}",x, y);
+    self.child_x.push_back(x);
+    self.child_y.push_back(y);
     self.vec.push_back("</svg>".to_string())
   }
 }
